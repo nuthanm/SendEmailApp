@@ -1,16 +1,40 @@
 ﻿
 using EmailApp.Application.EmailContracts;
 using EmailApp.Application.Models;
-using EmailApp.Infrastructure;
+using EmailApp.Infrastructure.Exceptions;
+using EmailApp.Infrastructure.Extensions;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
-// Object Initiation
-IEmailService emailService = new EmailService();
+var host = CreateHostBuilder(args).Build();
 
-// Sending an email
-await emailService.SendEmailAsync(
-    new EmailMessage
+static IHostBuilder CreateHostBuilder(string[] args) =>
+        Host.CreateDefaultBuilder(args)
+            .ConfigureServices((hostContext, services) =>
+            {
+                services.Configure<EmailConfiguration>(hostContext.Configuration.GetSection("EmailConfiguration"));
+                services.AddInfrastructureServices();
+            });
+
+// Dependency injection approach (recommended for security)
+using (var scope = host.Services.CreateScope())
+{
+    var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
+
+    try
     {
-        To = "testUser@gmail.com",
-        Subject = "Sending via c# using SMTP Server",
-        Body = " Welcome to our world!!!"
-    });
+        // Sending an email with injected EmailConfiguration
+        await emailService.SendEmailAsync(
+            new EmailMessage
+            {
+                To = "<Add_your_to_address>",
+                Subject = "Sending via c# using SMTP Server",
+                Body = "Welcome to our world!"
+            });
+        Console.WriteLine("Email sent successfully.");
+    }
+    catch (Exception ex)
+    {
+        _ = new SmtpEmailException(ex, email: string.Empty, "Welcome mail");
+    }
+}

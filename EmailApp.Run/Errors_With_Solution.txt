@@ -1,0 +1,16 @@
+Code: 
+public class EmailService(EmailConfiguration _emailConfiguration) : IEmailService
+{
+}
+
+Error: 
+System.InvalidOperationException: 'Unable to resolve service for type 'EmailApp.Application.Models.EmailConfiguration' while attempting to activate 'EmailApp.Infrastructure.EmailService'.'
+
+To resolve this:
+public class EmailService(IOptions<EmailConfiguration> _emailConfiguration) : IEmailService
+{
+}
+and access using _emailConfiguration.Value.[Property];
+-------------------------------------------------------------------------------------------------------------
+
+
